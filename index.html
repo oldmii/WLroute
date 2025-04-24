@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Win-Lost Tracker Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #f8fafc;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 36px auto 0 auto;
+            padding: 24px 28px 36px 28px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .header-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+        .header-row b {
+            font-size: 1.16em;
+            letter-spacing: 1px;
+            margin-right: 18px;
+            min-width: 70px;
+            text-align: right;
+        }
+        .bankroll-input {
+            width: 120px;
+            padding: 6px 12px;
+            font-size: 1.1em;
+            border: 1px solid #b2bec3;
+            border-radius: 6px;
+            outline: none;
+            margin-left: 12px;
+            transition: border 0.2s;
+        }
+        .bankroll-input:focus {
+            border: 1.5px solid #5a7d2b;
+        }
+        .reset-btn {
+            margin-left: 18px;
+            padding: 6px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 6px;
+            background: #5a7d2b;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .reset-btn:hover {
+            background: #46621e;
+        }
+        .main-flex {
+            display: flex;
+            align-items: flex-start;
+            gap: 32px;
+        }
+        .left-panel {
+            width: 60%;
+            min-width: 350px;
+        }
+        .right-panel {
+            width: 40%;
+            min-width: 260px;
+            margin-top: 6px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: #f7fafd;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(90,125,43,0.04);
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 7px 10px;
+            text-align: center;
+            font-size: 1em;
+        }
+        th {
+            background: #eaf5e9;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        tr:nth-child(even) { background: #f3f7fa; }
+        tr:nth-child(odd) { background: #f7fafd; }
+        .bold { font-weight: bold; }
+        .red { color: #c00; }
+        .green { color: #008000; }
+        .wl-bar {
+            background: #5a7d2b;
+            height: 24px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .wl-symbols {
+            min-height: 150px;
+            padding: 10px 0 0 0;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .wl-col {
+            display: inline-block;
+            vertical-align: top;
+            margin-right: 18px;
+            white-space: normal;
+        }
+        .wl-symbol {
+            font-size: 22px;
+            font-weight: bold;
+            display: block;
+            margin: 2px 0;
+        }
+        .bet-input {
+            width: 80px;
+            padding: 5px 8px;
+            font-size: 1em;
+            border: 1px solid #b2bec3;
+            border-radius: 5px;
+            outline: none;
+            text-align: right;
+            transition: border 0.2s;
+        }
+        .bet-input:focus {
+            border: 1.5px solid #5a7d2b;
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] { -moz-appearance: textfield; }
+        select {
+            padding: 5px 8px;
+            border-radius: 5px;
+            border: 1px solid #b2bec3;
+            font-size: 1em;
+            outline: none;
+            transition: border 0.2s;
+        }
+        select:focus {
+            border: 1.5px solid #5a7d2b;
+        }
+        @media (max-width: 900px) {
+            .main-flex { flex-direction: column; gap: 0; }
+            .left-panel, .right-panel { width: 100%; min-width: 0; }
+            .wl-symbols { min-height: 80px; }
+        }
+        /* --------- 移动端专用样式 --------- */
+        .top-wl-panel {
+            display: none; /* 默认隐藏，仅移动端显示 */
+        }
+        @media (max-width: 600px) {
+            .container {
+                max-width: 100vw;
+                margin: 0;
+                padding: 0 0 24px 0;
+                border-radius: 0;
+                box-shadow: none;
+                padding-top: 300px !important;
+            }
+            .header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                margin-bottom: 12px;
+                padding: 0 12px;
+                margin-top: 18px;
+            }
+            .header-row b {
+                font-size: 1em;
+                margin-bottom: 8px;
+                margin-right: 0;
+            }
+            .bankroll-input {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                font-size: 0.96em;
+                margin-left: 0;
+                margin-bottom: 8px;
+                padding: 5px 8px;
+            }
+            .reset-btn {
+                width: 100%;
+                max-width: 100%;
+                margin: 0 0 0 0;
+                font-size: 0.95em;
+                padding: 8px 0;
+                box-sizing: border-box;
+            }
+            .main-flex {
+                flex-direction: column;
+                gap: 0;
+                padding-bottom: 0;
+                padding-top: 0;
+            }
+            .left-panel {
+                overflow-x: auto;
+                width: 96vw;
+                max-width: 96vw;
+                margin: 0 auto;
+            }
+            table {
+                font-size: 0.90em !important;
+                border-radius: 0;
+                box-shadow: none;
+                width: 98%;
+                min-width: 360px;
+                margin: 0 auto;
+            }
+            th, td {
+                padding: 7px 2px !important;
+                font-size: 0.90em !important;
+                line-height: 1.15em;
+            }
+            /* 缩小Rnd列，扩大Bet列，缩小Result列 */
+            .left-panel table th:nth-child(1),
+            .left-panel table td:nth-child(1) {
+                width: 32px;
+                min-width: 24px;
+                max-width: 40px;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            .left-panel table th:nth-child(2),
+            .left-panel table td:nth-child(2) {
+                width: 102px;
+                min-width: 80px;
+                max-width: 120px;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            .left-panel table th:nth-child(3),
+            .left-panel table td:nth-child(3) {
+                width: 54px;
+                min-width: 46px;
+                max-width: 66px;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            /* BR和Profit列宽度互换 */
+            .left-panel table th:nth-child(4),
+            .left-panel table td:nth-child(4) {
+                /* 原Profit宽度给BR */
+                width: 62px;
+                min-width: 54px;
+                max-width: 82px;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            .left-panel table th:nth-child(5),
+            .left-panel table td:nth-child(5) {
+                /* 原BR宽度给Profit */
+                width: 46px;
+                min-width: 36px;
+                max-width: 60px;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            .bet-input {
+                width: 90% !important;
+                min-width: 58px;
+                max-width: 110px;
+                font-size: 0.90em !important;
+                padding: 5px 3px !important;
+                min-height: 28px;
+                box-sizing: border-box;
+            }
+            select {
+                width: 95%;
+                font-size: 0.90em !important;
+                padding: 5px 3px !important;
+                min-height: 28px;
+            }
+            .top-wl-title {
+                font-size: 0.95em !important;
+                padding: 12px 0 8px 10px;
+                min-height: 26px;
+            }
+            .wl-bar {
+                display: none;
+            }
+            /* 顶部固定符号区，仅移动端显示 */
+            .top-wl-panel {
+                display: flex !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                background: #fff;
+                box-shadow: 0 2px 12px rgba(90,125,43,0.10);
+                z-index: 1000;
+                padding: 0 0 0 0;
+                margin: 0;
+                border-radius: 0 0 12px 12px;
+                height: 300px;
+                flex-direction: column;
+                justify-content: flex-start;
+            }
+            .top-wl-panel .wl-symbols {
+                flex: 1 1 auto;
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 8px;
+                width: 100vw;
+                height: 240px;
+                max-height: 240px;
+                overflow-x: auto;
+                overflow-y: auto;
+                background: #fff;
+                padding: 8px 0 8px 8px;
+                box-sizing: border-box;
+                margin: 0;
+            }
+            .top-wl-panel .wl-col {
+                display: flex;
+                flex-direction: column;
+                flex-wrap: nowrap;
+                min-width: 18px;
+                margin-right: 0;
+            }
+            .top-wl-panel .wl-symbol {
+                font-size: 1.3em;
+                line-height: 1.1em;
+                margin: 0 1px 1px 1px;
+                display: block;
+                word-break: break-all;
+            }
+            .right-panel {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部符号区，仅移动端显示 -->
+    <div class="top-wl-panel" id="topWlPanel">
+        <span class="top-wl-title">WL Route</span>
+        <div class="wl-symbols" id="topWlSymbols"></div>
+    </div>
+    <div class="container">
+        <div class="header-row">
+            <b>Bankroll</b>
+            <input type="text" id="bankrollInput" class="bankroll-input" value="0" pattern="\d*" maxlength="9" autocomplete="off" />
+            <button class="reset-btn" id="resetBtn">Reset</button>
+        </div>
+        <div class="main-flex">
+            <div class="left-panel">
+                <table id="gameTable">
+                    <thead>
+                        <tr>
+                            <th>Rnd</th>
+                            <th>Bet</th>
+                            <th>Result</th>
+                            <th>BR</th>
+                            <th>Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="right-panel">
+                <b style="font-size: 1.1em; letter-spacing: 1px;">WL Route</b>
+                <div class="wl-bar"></div>
+                <div class="wl-symbols" id="wlSymbols"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const MAX_ROUNDS = 60;
+        const tableBody = document.getElementById('tableBody');
+        const bankrollInput = document.getElementById('bankrollInput');
+        const wlSymbols = document.getElementById('wlSymbols');
+        const topWlSymbols = document.getElementById('topWlSymbols');
+        const resetBtn = document.getElementById('resetBtn');
+
+        function getInitialState() {
+            return {
+                bankroll: 0,
+                rounds: Array.from({length: MAX_ROUNDS}, () => ({
+                    bet: '',
+                    result: '',
+                    br: '',
+                    profit: ''
+                }))
+            };
+        }
+        let state = getInitialState();
+
+        bankrollInput.addEventListener('focus', function () {
+            if (this.value === '0') {
+                this.value = '';
+            }
+        });
+        bankrollInput.addEventListener('blur', function () {
+            if (this.value === '') {
+                this.value = '0';
+            }
+            state.bankroll = parseInt(this.value, 10) || 0;
+            updateTable();
+        });
+        bankrollInput.addEventListener('input', function () {
+            this.value = this.value.replace(/[^\d]/g, '');
+            state.bankroll = this.value === '' ? 0 : parseInt(this.value, 10);
+            updateTable();
+        });
+
+        resetBtn.addEventListener('click', function() {
+            state = getInitialState();
+            bankrollInput.value = '0';
+            renderTable();
+            renderWLSymbols();
+        });
+
+        function renderTable() {
+            tableBody.innerHTML = '';
+            for (let i = 0; i < MAX_ROUNDS; i++) {
+                const row = state.rounds[i];
+                let tr = document.createElement('tr');
+                // Rnd
+                let tdRnd = document.createElement('td');
+                tdRnd.textContent = i + 1;
+                tr.appendChild(tdRnd);
+
+                // Bet
+                let tdBet = document.createElement('td');
+                let betInput = document.createElement('input');
+                betInput.type = 'text';
+                betInput.className = 'bet-input';
+                betInput.inputMode = 'numeric';
+                betInput.pattern = '[0-9]*';
+                betInput.value = row.bet !== '' ? row.bet : '';
+                betInput.disabled = (i > 0 && !state.rounds[i-1].result);
+                betInput.placeholder = '0';
+                betInput.maxLength = 9;
+                betInput.dataset.row = i;
+                betInput.addEventListener('input', function(e) {
+                    let v = this.value.replace(/[^\d]/g, '');
+                    this.value = v;
+                    state.rounds[i].bet = (v === '' ? '' : parseInt(v, 10));
+                    updateTable();
+                });
+                tdBet.appendChild(betInput);
+                tr.appendChild(tdBet);
+
+                // Result
+                let tdResult = document.createElement('td');
+                let select = document.createElement('select');
+                select.innerHTML = `<option value=""></option>
+                                    <option value="Win">Win</option>
+                                    <option value="Lost">Lost</option>`;
+                select.value = row.result;
+                // 只受跳行约束，不受Bet是否填写影响
+                select.disabled = (i > 0 && !state.rounds[i-1].result);
+                select.dataset.row = i;
+                select.addEventListener('change', function() {
+                    state.rounds[i].result = this.value;
+                    updateTable();
+                });
+                tdResult.appendChild(select);
+                tr.appendChild(tdResult);
+
+                // BR
+                let tdBR = document.createElement('td');
+                tdBR.className = 'br-cell';
+                tdBR.dataset.row = i;
+                tdBR.innerHTML = row.br !== '' ? `<b>${row.br.toLocaleString()}</b>` : '';
+                tr.appendChild(tdBR);
+
+                // Profit
+                let tdProfit = document.createElement('td');
+                tdProfit.className = 'profit-cell';
+                tdProfit.dataset.row = i;
+                tdProfit.textContent = row.profit !== '' ? row.profit.toLocaleString() : '';
+                tr.appendChild(tdProfit);
+
+                tableBody.appendChild(tr);
+            }
+        }
+
+        function updateTable() {
+            let currBR = state.bankroll;
+            let shouldClear = false;
+            for (let i = 0; i < MAX_ROUNDS; i++) {
+                let row = state.rounds[i];
+                let betInput = document.querySelector(`input.bet-input[data-row="${i}"]`);
+                let select = document.querySelector(`select[data-row="${i}"]`);
+                let brCell = document.querySelector(`.br-cell[data-row="${i}"]`);
+                let profitCell = document.querySelector(`.profit-cell[data-row="${i}"]`);
+
+                // 不能跳行：前一行没结果，本行禁用
+                if (betInput) betInput.disabled = (i > 0 && !state.rounds[i-1].result);
+                if (select) select.disabled = (i > 0 && !state.rounds[i-1].result);
+
+                // 需要清空后续行
+                if (shouldClear) {
+                    state.rounds[i] = {bet: '', result: '', br: '', profit: ''};
+                    if (betInput) betInput.value = '';
+                    if (select) {
+                        select.value = '';
+                        select.disabled = true;
+                    }
+                    if (brCell) brCell.innerHTML = '';
+                    if (profitCell) profitCell.textContent = '';
+                    continue;
+                }
+
+                // 没有Result，清空本行及后续的BR/Profit
+                if (!row.result) {
+                    if (brCell) brCell.innerHTML = '';
+                    if (profitCell) profitCell.textContent = '';
+                    shouldClear = true;
+                    continue;
+                }
+
+                // 有Result，正常计算
+                let bet = parseInt(row.bet, 10) || 0;
+                if (i === 0) {
+                    currBR = (row.result === 'Win') ? state.bankroll + bet : state.bankroll - bet;
+                } else {
+                    currBR = (row.result === 'Win') ? currBR + bet : currBR - bet;
+                }
+                row.br = currBR;
+                row.profit = currBR - state.bankroll;
+                if (brCell) brCell.innerHTML = `<b>${row.br.toLocaleString()}</b>`;
+                if (profitCell) profitCell.textContent = row.profit.toLocaleString();
+            }
+            renderWLSymbols();
+        }
+
+        function renderWLSymbols() {
+            let results = state.rounds.map(r => r.result).filter(r => r === 'Win' || r === 'Lost');
+            let groups = [];
+            let last = null, group = [];
+            for (let res of results) {
+                if (res !== last && group.length) {
+                    groups.push(group);
+                    group = [];
+                }
+                group.push(res);
+                last = res;
+            }
+            if (group.length) groups.push(group);
+
+            // 桌面端符号区
+            wlSymbols.innerHTML = '';
+            groups.forEach(group => {
+                let col = document.createElement('div');
+                col.className = 'wl-col';
+                group.forEach(res => {
+                    let symbol = document.createElement('span');
+                    symbol.className = 'wl-symbol ' + (res === 'Win' ? 'red' : 'green');
+                    symbol.textContent = res === 'Win' ? '+' : '-';
+                    col.appendChild(symbol);
+                });
+                wlSymbols.appendChild(col);
+            });
+
+            // 移动端顶部符号区
+            if (topWlSymbols) {
+                topWlSymbols.innerHTML = '';
+                // 计算所有组中最大长度
+                let maxLen = 0;
+                groups.forEach(group => { if (group.length > maxLen) maxLen = group.length; });
+                groups.forEach(group => {
+                    let col = document.createElement('div');
+                    col.className = 'wl-col';
+                    group.forEach(res => {
+                        let symbol = document.createElement('span');
+                        symbol.className = 'wl-symbol ' + (res === 'Win' ? 'red' : 'green');
+                        symbol.textContent = res === 'Win' ? '+' : '-';
+                        col.appendChild(symbol);
+                    });
+                    topWlSymbols.appendChild(col);
+                });
+                // 控制整个符号区是否显示竖向滚动条
+                if (maxLen > 6) {
+                    topWlSymbols.style.overflowY = 'auto';
+                } else {
+                    topWlSymbols.style.overflowY = 'hidden';
+                }
+                // 自动滚动到最右
+                setTimeout(() => {
+                    topWlSymbols.scrollLeft = topWlSymbols.scrollWidth;
+                }, 0);
+            }
+        }
+
+        // 初始化
+        renderTable();
+        renderWLSymbols();
+    </script>
+</body>
+</html>
